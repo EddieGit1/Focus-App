@@ -1,8 +1,8 @@
-// Configuratie constanten voor de applicatie
-const VIDEO_WIDTH = 640;  // Standaard breedte voor videocapture
-const VIDEO_HEIGHT = 480; // Standaard hoogte voor videocapture
-const STORAGE_KEY = 'focus-samples'; // Sleutel voor opslag in localStorage
-const DISTRACTION_THRESHOLD = 5000; // 5 seconden in milliseconden
+// Configuratie voor de applicatie
+const VIDEO_WIDTH = 640;  
+const VIDEO_HEIGHT = 480; 
+const STORAGE_KEY = 'focus-samples'; 
+const DISTRACTION_THRESHOLD = 5000; 
 
 // Globale applicatiestate die alle belangrijke variabelen bevat
 const state = {
