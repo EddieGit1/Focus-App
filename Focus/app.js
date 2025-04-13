@@ -260,7 +260,7 @@ function playDistractionAlert() {
     
     // Browser notificatie
     if (Notification.permission === 'granted') {
-        new Notification('FocusGuard Melding', {
+        new Notification('Focus Melding', {
             body: 'Je bent al 5 seconden afgeleid!'
         });
     }

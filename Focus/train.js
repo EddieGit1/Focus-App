@@ -197,7 +197,7 @@ function exportToJSON() {
     const dataStr = JSON.stringify(state.samples, null, 2);
     const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
     
-    const exportName = `focusguard-samples_${new Date().toISOString().slice(0,10)}.json`;
+    const exportName = `Focus-samples_${new Date().toISOString().slice(0,10)}.json`;
     
     const linkElement = document.createElement('a');
     linkElement.setAttribute('href', dataUri);
