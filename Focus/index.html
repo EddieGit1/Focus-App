@@ -3,18 +3,21 @@
 <head>
     <title>Focus - Afleiding Detector</title>
     <link rel="stylesheet" href="style.css">
+    <!-- Font Awesome voor betrouwbare iconen -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Externe bibliotheken -->
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/knn-classifier"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose"></script>
     <!-- Mobile viewport configuratie -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta charset="UTF-8">
 </head>
 <body>
     <!-- Hoofdcontainer -->
     <div class="container app-container">
         <header>
-            <h1>Focus <span id="status-icon">🔴</span></h1>
+            <h1>Focus <span id="status-icon"><i class="fas fa-circle" style="color:red"></i></span></h1>
             <p class="subtitle">Houd je focus met onze pose-detector</p>
         </header>
 
@@ -41,7 +44,7 @@
                 <div class="button-group">
                     <!-- Focus mode knop -->
                     <button id="btn-train" class="btn-train">
-                        <span class="icon">🎓</span> Start Focus Mode
+                        <span class="icon"><i class="fas fa-graduation-cap"></i></span> Start Focus Mode
                     </button>
                 </div>
 
@@ -61,7 +64,7 @@
         <!-- Afleidingsmelding (verborgen standaard) -->
         <div id="distraction-alert">
             <div class="alert-content">
-                ⚠️ Je bent te lang afgeleid! ⚠️
+                <i class="fas fa-exclamation-triangle"></i> Je bent te lang afgeleid! <i class="fas fa-exclamation-triangle"></i>
             </div>
         </div>
     </div>

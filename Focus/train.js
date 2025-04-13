@@ -1,40 +1,47 @@
+// Configuratie voor trainingsmodus
 const VIDEO_WIDTH = 640;  
-const VIDEO_HEIGHT = 480; 
+const VIDEO_HEIGHT = 480;
 const STORAGE_KEY = 'focus-samples'; 
-const MIN_SAMPLES = 3; 
+const MIN_SAMPLES = 3;
 
+// Hoofd state object voor trainingsmodus
 const state = {
-    classifier: knnClassifier.create(), 
-    video: null, 
-    canvas: null, 
-    ctx: null, 
-    samples: [], 
-    currentPose: null, 
-    pose: null, 
-    detectionInterval: null 
+    classifier: knnClassifier.create(), // KNN-classifier instance
+    video: null, // Video element referentie
+    canvas: null, // Canvas element referentie
+    ctx: null, // Canvas 2D context
+    samples: [], // Array van alle trainingssamples
+    currentPose: null, // Huidige gedetecteerde pose
+    pose: null, // MediaPipe Pose instance
+    detectionInterval: null // Interval ID voor pose detectie
 };
 
+// DOM element referenties voor trainingsmodus
 const elements = {
-    feedback: document.getElementById('feedback'),
-    statusIcon: document.getElementById('status-icon'),
+    feedback: document.getElementById('feedback'), // Feedback tekst
+    statusIcon: document.getElementById('status-icon'), // Status icoon
     counters: {
-        concentrated: document.getElementById('count-concentrated'),
-        distracted: document.getElementById('count-distracted')
+        concentrated: document.getElementById('count-concentrated'), // Teller geconcentreerd
+        distracted: document.getElementById('count-distracted') // Teller afgeleid
     },
-    accuracyValue: document.getElementById('accuracy-value'),
-    matrixContent: document.getElementById('matrix-content')
+    accuracyValue: document.getElementById('accuracy-value'), // Nauwkeurigheid waarde
+    matrixContent: document.getElementById('matrix-content') // Confusion matrix inhoud
 };
 
+// Initialiseer trainingsmodus
 async function init() {
     try {
+        // Verkrijg DOM referenties
         state.video = document.getElementById('webcam');
         state.canvas = document.getElementById('canvas');
         state.ctx = state.canvas.getContext('2d');
         
+        // Initialiseer MediaPipe Pose
         state.pose = new Pose({
             locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`
         });
         
+        // Configureer pose detectie
         state.pose.setOptions({
             modelComplexity: 1,
             smoothLandmarks: true,
@@ -44,12 +51,22 @@ async function init() {
             minTrackingConfidence: 0.5
         });
         
+        // Stel callback in voor pose resultaten
         state.pose.onResults(onPoseResults);
+        
+        // Laad opgeslagen samples
         loadSamples();
+        
+        // Stel event listeners in
         setupEventListeners();
+        
+        // Start camera
         await setupCamera();
+        
+        // Start detectie lus
         startDetectionLoop();
         
+        // Geef feedback
         elements.feedback.textContent = "Klaar voor dataverzameling!";
     } catch (err) {
         elements.feedback.textContent = `Fout: ${err.message}`;
@@ -57,12 +74,16 @@ async function init() {
     }
 }
 
+// Start pose detectie lus
 function startDetectionLoop() {
     state.detectionInterval = setInterval(() => {
-        if (state.video.readyState >= 2) state.pose.send({ image: state.video });
+        if (state.video.readyState >= 2) {
+            state.pose.send({ image: state.video });
+        }
     }, 100);
 }
 
+// Stop pose detectie lus
 function stopDetectionLoop() {
     if (state.detectionInterval) {
         clearInterval(state.detectionInterval);
@@ -70,6 +91,7 @@ function stopDetectionLoop() {
     }
 }
 
+// Stel camera in
 async function setupCamera() {
     const stream = await navigator.mediaDevices.getUserMedia({
         video: { width: VIDEO_WIDTH, height: VIDEO_HEIGHT, facingMode: 'user' },
@@ -79,20 +101,24 @@ async function setupCamera() {
     return new Promise((resolve) => state.video.onloadedmetadata = resolve);
 }
 
+// Verwerk pose detectie resultaten
 function onPoseResults(results) {
     if (!results.poseLandmarks) {
         state.currentPose = null;
         return;
     }
     
+    // Update huidige pose en canvas
     state.currentPose = results.poseLandmarks;
     state.canvas.width = state.video.videoWidth;
     state.canvas.height = state.video.videoHeight;
     
+    // Teken pose op canvas
     state.ctx.save();
     state.ctx.clearRect(0, 0, state.canvas.width, state.canvas.height);
     state.ctx.drawImage(results.image, 0, 0);
     
+    // Teken landmarks
     state.ctx.fillStyle = '#FF0000';
     state.currentPose.forEach(landmark => {
         state.ctx.beginPath();
@@ -102,21 +128,25 @@ function onPoseResults(results) {
     state.ctx.restore();
 }
 
+// Voeg sample toe aan trainingsset
 function addSample(label) {
     if (!state.currentPose) return;
     
+    // Extraheer features van huidige pose
     const features = state.currentPose.map(p => [p.x, p.y, p.visibility]).flat();
     state.samples.push({ pose: features, label });
-    saveSamples();
-    updateSampleCount();
+    saveSamples(); // Sla op
+    updateSampleCount(); // Update UI tellers
     elements.feedback.textContent = `Sample toegevoegd: ${label === 'concentrated' ? 'Geconcentreerd' : 'Afgeleid'}`;
 }
 
+// Sla samples op in localStorage
 function saveSamples() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state.samples));
     elements.feedback.textContent = `Opgeslagen: ${state.samples.length} samples`;
 }
 
+// Laad samples van localStorage
 function loadSamples() {
     const savedData = localStorage.getItem(STORAGE_KEY);
     if (savedData) {
@@ -126,16 +156,19 @@ function loadSamples() {
     }
 }
 
+// Exporteer samples naar JSON bestand
 function exportToJSON() {
     if (state.samples.length === 0) {
         elements.feedback.textContent = "Geen samples om te exporteren!";
         return;
     }
 
+    // Maak downloadbare JSON
     const dataStr = JSON.stringify(state.samples, null, 2);
     const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
     const exportName = `Focus-samples_${new Date().toISOString().slice(0,10)}.json`;
     
+    // Maak tijdelijke download link
     const linkElement = document.createElement('a');
     linkElement.setAttribute('href', dataUri);
     linkElement.setAttribute('download', exportName);
@@ -144,6 +177,7 @@ function exportToJSON() {
     elements.feedback.textContent = `Exported ${state.samples.length} samples naar JSON`;
 }
 
+// Update sample tellers in UI
 function updateSampleCount() {
     const counts = state.samples.reduce((acc, sample) => {
         acc[sample.label] = (acc[sample.label] || 0) + 1;
@@ -154,18 +188,24 @@ function updateSampleCount() {
     elements.counters.distracted.textContent = counts.distracted;
 }
 
+// Train het classificatiemodel
 function trainModel() {
+    // Tel samples per klasse
     const counts = state.samples.reduce((acc, sample) => {
         acc[sample.label] = (acc[sample.label] || 0) + 1;
         return acc;
     }, { concentrated: 0, distracted: 0 });
     
+    // Controleer minimum samples
     if (counts.concentrated < MIN_SAMPLES || counts.distracted < MIN_SAMPLES) {
         elements.feedback.textContent = `Minimaal ${MIN_SAMPLES} samples van elk type nodig (${counts.concentrated} geconcentreerd, ${counts.distracted} afgeleid)`;
         return false;
     }
     
+    // Wis vorig model
     state.classifier.clearAllClasses();
+    
+    // Train met alle samples
     state.samples.forEach(sample => {
         const tensor = tf.tensor1d(sample.pose);
         state.classifier.addExample(tensor, sample.label);
@@ -176,26 +216,31 @@ function trainModel() {
     return true;
 }
 
+// Bereken modelnauwkeurigheid met 80/20 train/test split
 async function calculateAccuracy() {
     if (state.samples.length < 6) {
         elements.feedback.textContent = "Minimaal 6 samples nodig voor nauwkeurigheidstest";
         return;
     }
 
+    // Split data in training en test sets
     const shuffled = [...state.samples].sort(() => 0.5 - Math.random());
     const splitIdx = Math.floor(shuffled.length * 0.8);
     const trainData = shuffled.slice(0, splitIdx);
     const testData = shuffled.slice(splitIdx);
 
+    // Maak tijdelijke classifier voor testen
     const testClassifier = knnClassifier.create();
     
     try {
+        // Train tijdelijke classifier
         for (const sample of trainData) {
             const tensor = tf.tensor1d(sample.pose);
             testClassifier.addExample(tensor, sample.label);
             tensor.dispose();
         }
 
+        // Test nauwkeurigheid
         let correct = 0;
         const confusionMatrix = {
             trueConcentrated: 0,
@@ -209,6 +254,7 @@ async function calculateAccuracy() {
             const prediction = await testClassifier.predictClass(tensor);
             tensor.dispose();
             
+            // Update confusion matrix
             if (prediction.label === sample.label) {
                 correct++;
                 if (sample.label === 'concentrated') confusionMatrix.trueConcentrated++;
@@ -219,9 +265,11 @@ async function calculateAccuracy() {
             }
         }
 
+        // Bereken en toon nauwkeurigheid
         const accuracy = (correct / testData.length) * 100;
         elements.accuracyValue.textContent = `${accuracy.toFixed(1)}%`;
         
+        // Update confusion matrix UI
         elements.matrixContent.innerHTML = `
             <table>
                 <tr>
@@ -247,17 +295,25 @@ async function calculateAccuracy() {
         console.error("Fout tijdens nauwkeurigheidstest:", error);
         elements.feedback.textContent = "Fout tijdens nauwkeurigheidstest";
     } finally {
-        testClassifier.dispose();
+        testClassifier.dispose(); // Opruimen
     }
 }
 
+// Stel event listeners in
 function setupEventListeners() {
+    // Sample toevoegen knoppen
     document.getElementById('btn-concentrated').addEventListener('click', () => addSample('concentrated'));
     document.getElementById('btn-distracted').addEventListener('click', () => addSample('distracted'));
+    
+    // Opslaan en export knoppen
     document.getElementById('btn-save').addEventListener('click', saveSamples);
     document.getElementById('btn-export').addEventListener('click', exportToJSON);
+    
+    // Train en test knoppen
     document.getElementById('btn-train').addEventListener('click', trainModel);
     document.getElementById('btn-test-accuracy').addEventListener('click', calculateAccuracy);
+    
+    // Reset knop
     document.getElementById('btn-reset').addEventListener('click', () => {
         if (confirm('Weet je zeker dat je alle data wilt resetten?')) {
             localStorage.removeItem(STORAGE_KEY);
@@ -272,4 +328,5 @@ function setupEventListeners() {
     });
 }
 
+// Start trainingsmodus wanneer DOM geladen is
 document.addEventListener('DOMContentLoaded', init);

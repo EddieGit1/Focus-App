@@ -3,18 +3,21 @@
 <head>
     <title>Focus - Trainingsmodus</title>
     <link rel="stylesheet" href="style.css">
+    <!-- Font Awesome voor betrouwbare iconen -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Externe bibliotheken -->
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/knn-classifier"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose"></script>
     <!-- Mobile viewport configuratie -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta charset="UTF-8">
 </head>
 <body>
     <!-- Hoofdcontainer voor trainingsmodus -->
     <div class="container train-container">
         <header>
-            <h1>Focus <span id="status-icon">🔴</span></h1>
+            <h1>Focus <span id="status-icon"><i class="fas fa-circle" style="color:red"></i></span></h1>
             <p class="subtitle">Trainingsmodus</p>
         </header>
 
@@ -63,33 +66,33 @@
                 <!-- Eerste knopgroep - Sample toevoegen -->
                 <div class="button-group">
                     <button id="btn-concentrated" class="btn-primary">
-                        <span class="icon">➕</span> Voeg geconcentreerd toe
+                        <span class="icon"><i class="fas fa-plus"></i></span> Voeg geconcentreerd toe
                     </button>
                     <button id="btn-distracted" class="btn-danger">
-                        <span class="icon">➖</span> Voeg afgeleid toe
+                        <span class="icon"><i class="fas fa-minus"></i></span> Voeg afgeleid toe
                     </button>
                 </div>
 
                 <!-- Tweede knopgroep - Model acties -->
                 <div class="button-group">
                     <button id="btn-train" class="btn-train">
-                        <span class="icon">🎓</span> Train Model
+                        <span class="icon"><i class="fas fa-graduation-cap"></i></span> Train Model
                     </button>
                     <button id="btn-test-accuracy" class="btn-secondary">
-                        <span class="icon">📊</span> Test Nauwkeurigheid
+                        <span class="icon"><i class="fas fa-chart-bar"></i></span> Test Nauwkeurigheid
                     </button>
                 </div>
 
                 <!-- Derde knopgroep - Data acties -->
                 <div class="button-group">
                     <button id="btn-save" class="btn-secondary">
-                        <span class="icon">💾</span> Opslaan
+                        <span class="icon"><i class="fas fa-save"></i></span> Opslaan
                     </button>
                     <button id="btn-export" class="btn-secondary">
-                        <span class="icon">📤</span> Export JSON
+                        <span class="icon"><i class="fas fa-file-export"></i></span> Export JSON
                     </button>
                     <button id="btn-reset" class="btn-danger">
-                        <span class="icon">⚠️</span> Reset Alles
+                        <span class="icon"><i class="fas fa-exclamation-triangle"></i></span> Reset Alles
                     </button>
                 </div>
 
