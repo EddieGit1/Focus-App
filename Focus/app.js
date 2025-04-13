@@ -209,8 +209,8 @@ function trainModel() {
         return acc;
     }, { concentrated: 0, distracted: 0 });
     
-    if (counts.concentrated < 3 || counts.distracted < 3) {
-        elements.feedback.textContent = `Minimaal 3 samples van elk type nodig (${counts.concentrated} geconcentreerd, ${counts.distracted} afgeleid)`;
+    if (counts.concentrated < 20 || counts.distracted < 20) {
+        elements.feedback.textContent = `Minimaal 20 samples van elk type nodig (${counts.concentrated} geconcentreerd, ${counts.distracted} afgeleid)`;
         return false;
     }
     
