@@ -2,7 +2,7 @@
 const VIDEO_WIDTH = 640;  
 const VIDEO_HEIGHT = 480; 
 const STORAGE_KEY = 'focus-samples'; 
-const MIN_SAMPLES = 3; 
+const MIN_SAMPLES = 20; 
 
 // App state - Bevat alle trainingsgerelateerde toestanden
 const state = {
