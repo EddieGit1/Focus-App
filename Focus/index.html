@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>FocusGuard - Afleiding Detector</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/knn-classifier"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+</head>
+<body>
+    <div class="container app-container">
+        <header>
+            <h1>FocusGuard <span id="status-icon">🔴</span></h1>
+            <p class="subtitle">Houd je focus met onze pose-detector</p>
+        </header>
+
+        <div class="main-content">
+            <div class="video-section">
+                <div class="video-container">
+                    <video id="webcam" autoplay playsinline></video>
+                    <canvas id="canvas"></canvas>
+                </div>
+                <div id="feedback">Initialiseer camera...</div>
+                <div id="current-status" class="status-box">
+                    <span id="status-text">Status: Niet actief</span>
+                </div>
+            </div>
+
+            <div class="control-section">
+                <div class="button-group">
+                    <button id="btn-train" class="btn-train">
+                        <span class="icon">🎓</span> Start Focus Mode
+                    </button>
+                </div>
+
+                <div class="instructions">
+                    <h3>Hoe werkt het?</h3>
+                    <ol>
+                        <li>Klik op "Start Focus Mode" om te beginnen</li>
+                        <li>Groen = geconcentreerd, Rood = afgeleid</li>
+                        <li>Klik op pauze om te stoppen</li>
+                        <li>Na 5 seconden afgeleid te zijn, krijg je een alarmmelding</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+
+        <div id="distraction-alert">
+            <div class="alert-content">
+                ⚠️ Je bent te lang afgeleid! ⚠️
+            </div>
+        </div>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html>
