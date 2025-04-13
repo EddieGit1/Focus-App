@@ -1,22 +1,22 @@
 // Configuratie
-const VIDEO_WIDTH = 640;
-const VIDEO_HEIGHT = 480;
-const STORAGE_KEY = 'focusguard-samples';
-const MIN_SAMPLES = 3;
+const VIDEO_WIDTH = 640;  
+const VIDEO_HEIGHT = 480; 
+const STORAGE_KEY = 'focus-samples'; 
+const MIN_SAMPLES = 3; 
 
-// App state
+// App state - Bevat alle trainingsgerelateerde toestanden
 const state = {
-    classifier: knnClassifier.create(),
-    video: null,
-    canvas: null,
-    ctx: null,
-    samples: [],
-    currentPose: null,
-    pose: null,
-    detectionInterval: null
+    classifier: knnClassifier.create(), 
+    video: null, 
+    canvas: null, 
+    ctx: null, 
+    samples: [], 
+    currentPose: null, 
+    pose: null, 
+    detectionInterval: null 
 };
 
-// DOM-elementen
+// DOM-elementen - Verwijzen naar HTML elementen
 const elements = {
     feedback: document.getElementById('feedback'),
     statusIcon: document.getElementById('status-icon'),
@@ -28,7 +28,7 @@ const elements = {
     matrixContent: document.getElementById('matrix-content')
 };
 
-// Initialisatie
+
 async function init() {
     try {
         // Camera instellen
@@ -41,6 +41,7 @@ async function init() {
             locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`
         });
         
+        // Configuratieopties voor pose detection
         state.pose.setOptions({
             modelComplexity: 1,
             smoothLandmarks: true,
@@ -50,12 +51,13 @@ async function init() {
             minTrackingConfidence: 0.5
         });
         
+        // Callback voor pose resultaten
         state.pose.onResults(onPoseResults);
         
         // Laad opgeslagen data
         loadSamples();
         
-        // Event listeners
+        // Event listeners instellen
         setupEventListeners();
         
         // Start camera
@@ -72,6 +74,9 @@ async function init() {
     }
 }
 
+/**
+ * Start de pose detectie lus
+ */
 function startDetectionLoop() {
     state.detectionInterval = setInterval(() => {
         if (state.video.readyState >= 2) {
@@ -80,6 +85,9 @@ function startDetectionLoop() {
     }, 100);
 }
 
+/**
+ * Stopt de pose detectie lus
+ */
 function stopDetectionLoop() {
     if (state.detectionInterval) {
         clearInterval(state.detectionInterval);
@@ -87,7 +95,9 @@ function stopDetectionLoop() {
     }
 }
 
-// Camera instellen
+/**
+ * Stelt de camera in en start de videostream
+ */
 async function setupCamera() {
     const stream = await navigator.mediaDevices.getUserMedia({
         video: {
@@ -106,7 +116,10 @@ async function setupCamera() {
     });
 }
 
-// Pose-detectie callback
+/**
+ * Callback voor pose detectie resultaten
+ * @param {Object} results - Pose detectie resultaten
+ */
 function onPoseResults(results) {
     if (!results.poseLandmarks) {
         state.currentPose = null;
@@ -117,12 +130,12 @@ function onPoseResults(results) {
     state.canvas.width = state.video.videoWidth;
     state.canvas.height = state.video.videoHeight;
     
-    // Teken pose
+    // Teken pose op canvas
     state.ctx.save();
     state.ctx.clearRect(0, 0, state.canvas.width, state.canvas.height);
     state.ctx.drawImage(results.image, 0, 0);
     
-    // Teken landmarks
+    // Teken landmarks als rode stippen
     state.ctx.fillStyle = '#FF0000';
     state.currentPose.forEach(landmark => {
         state.ctx.beginPath();
@@ -136,10 +149,14 @@ function onPoseResults(results) {
     state.ctx.restore();
 }
 
-// Sample toevoegen
+/**
+ * Voegt een sample toe aan de trainingsset
+ * @param {string} label - Label voor de sample ('concentrated' of 'distracted')
+ */
 function addSample(label) {
     if (!state.currentPose) return;
     
+    // Extraheer features van de huidige pose
     const features = state.currentPose.map(p => [p.x, p.y, p.visibility]).flat();
     state.samples.push({ pose: features, label });
     saveSamples();
@@ -148,13 +165,17 @@ function addSample(label) {
     elements.feedback.textContent = `Sample toegevoegd: ${label === 'concentrated' ? 'Geconcentreerd' : 'Afgeleid'}`;
 }
 
-// Opslaan naar localStorage
+/**
+ * Slaat samples op in localStorage
+ */
 function saveSamples() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state.samples));
     elements.feedback.textContent = `Opgeslagen: ${state.samples.length} samples`;
 }
 
-// Laden van localStorage
+/**
+ * Laadt samples van localStorage
+ */
 function loadSamples() {
     const savedData = localStorage.getItem(STORAGE_KEY);
     if (savedData) {
@@ -164,6 +185,9 @@ function loadSamples() {
     }
 }
 
+/**
+ * Exporteert samples naar een JSON bestand
+ */
 function exportToJSON() {
     if (state.samples.length === 0) {
         elements.feedback.textContent = "Geen samples om te exporteren!";
@@ -183,7 +207,9 @@ function exportToJSON() {
     elements.feedback.textContent = `Exported ${state.samples.length} samples naar JSON`;
 }
 
-// UI updaten
+/**
+ * Update de sample tellers in de UI
+ */
 function updateSampleCount() {
     const counts = state.samples.reduce((acc, sample) => {
         acc[sample.label] = (acc[sample.label] || 0) + 1;
@@ -194,13 +220,17 @@ function updateSampleCount() {
     elements.counters.distracted.textContent = counts.distracted;
 }
 
-// Train model
+/**
+ * Traint het classificatiemodel met de huidige samples
+ * @returns {boolean} - Geeft aan of het trainen succesvol was
+ */
 function trainModel() {
     const counts = state.samples.reduce((acc, sample) => {
         acc[sample.label] = (acc[sample.label] || 0) + 1;
         return acc;
     }, { concentrated: 0, distracted: 0 });
     
+    // Controleer of er voldoende samples zijn
     if (counts.concentrated < MIN_SAMPLES || counts.distracted < MIN_SAMPLES) {
         elements.feedback.textContent = `Minimaal ${MIN_SAMPLES} samples van elk type nodig (${counts.concentrated} geconcentreerd, ${counts.distracted} afgeleid)`;
         return false;
@@ -209,7 +239,7 @@ function trainModel() {
     // Clear previous model
     state.classifier.clearAllClasses();
     
-    // Add new samples
+    // Voeg nieuwe samples toe aan het model
     state.samples.forEach(sample => {
         const tensor = tf.tensor1d(sample.pose);
         state.classifier.addExample(tensor, sample.label);
@@ -220,6 +250,9 @@ function trainModel() {
     return true;
 }
 
+/**
+ * Bereken de nauwkeurigheid van het model met een 80/20 train/test split
+ */
 async function calculateAccuracy() {
     if (state.samples.length < 6) {  // Minimaal 6 samples voor 80/20 split
         elements.feedback.textContent = "Minimaal 6 samples nodig voor nauwkeurigheidstest";
@@ -273,6 +306,7 @@ async function calculateAccuracy() {
             }
         }
 
+        // Bereken nauwkeurigheid
         const accuracy = (correct / testData.length) * 100;
         elements.accuracyValue.textContent = `${accuracy.toFixed(1)}%`;
         
@@ -307,8 +341,11 @@ async function calculateAccuracy() {
     }
 }
 
-// Event listeners
+/**
+ * Stelt event listeners in voor UI interacties
+ */
 function setupEventListeners() {
+    // Sample toevoegen knoppen
     document.getElementById('btn-concentrated').addEventListener('click', () => {
         addSample('concentrated');
     });
@@ -317,14 +354,19 @@ function setupEventListeners() {
         addSample('distracted');
     });
     
+    // Opslaan knop
     document.getElementById('btn-save').addEventListener('click', saveSamples);
     
+    // Export knop
     document.getElementById('btn-export').addEventListener('click', exportToJSON);
     
+    // Train model knop
     document.getElementById('btn-train').addEventListener('click', trainModel);
     
+    // Test nauwkeurigheid knop
     document.getElementById('btn-test-accuracy').addEventListener('click', calculateAccuracy);
     
+    // Reset knop
     document.getElementById('btn-reset').addEventListener('click', () => {
         if (confirm('Weet je zeker dat je alle data wilt resetten?')) {
             localStorage.removeItem(STORAGE_KEY);
@@ -339,5 +381,5 @@ function setupEventListeners() {
     });
 }
 
-// Start de applicatie
+// Start de applicatie wanneer de DOM geladen is
 document.addEventListener('DOMContentLoaded', init);

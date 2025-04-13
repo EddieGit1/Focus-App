@@ -3,37 +3,49 @@
 <head>
     <title>FocusGuard - Afleiding Detector</title>
     <link rel="stylesheet" href="style.css">
+    <!-- Externe bibliotheken -->
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/knn-classifier"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose"></script>
+    <!-- Mobile viewport configuratie -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 </head>
 <body>
+    <!-- Hoofdcontainer -->
     <div class="container app-container">
         <header>
             <h1>FocusGuard <span id="status-icon">🔴</span></h1>
             <p class="subtitle">Houd je focus met onze pose-detector</p>
         </header>
 
+        <!-- Hoofdinhoud -->
         <div class="main-content">
+            <!-- Video sectie -->
             <div class="video-section">
                 <div class="video-container">
+                    <!-- Webcam video element -->
                     <video id="webcam" autoplay playsinline></video>
+                    <!-- Canvas voor pose tekening -->
                     <canvas id="canvas"></canvas>
                 </div>
+                <!-- Feedback element -->
                 <div id="feedback">Initialiseer camera...</div>
+                <!-- Status box -->
                 <div id="current-status" class="status-box">
                     <span id="status-text">Status: Niet actief</span>
                 </div>
             </div>
 
+            <!-- Controle sectie -->
             <div class="control-section">
                 <div class="button-group">
+                    <!-- Focus mode knop -->
                     <button id="btn-train" class="btn-train">
                         <span class="icon">🎓</span> Start Focus Mode
                     </button>
                 </div>
 
+                <!-- Instructies -->
                 <div class="instructions">
                     <h3>Hoe werkt het?</h3>
                     <ol>
@@ -46,12 +58,14 @@
             </div>
         </div>
 
+        <!-- Afleidingsmelding (verborgen standaard) -->
         <div id="distraction-alert">
             <div class="alert-content">
                 ⚠️ Je bent te lang afgeleid! ⚠️
             </div>
         </div>
     </div>
+    <!-- Hoofd JavaScript bestand -->
     <script src="app.js"></script>
 </body>
 </html>

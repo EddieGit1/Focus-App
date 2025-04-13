@@ -1,25 +1,24 @@
 // Configuratie
-const VIDEO_WIDTH = 640;
-const VIDEO_HEIGHT = 480;
-const STORAGE_KEY = 'focusguard-samples';
-const DISTRACTION_THRESHOLD = 5000; // 5 seconden
+const VIDEO_WIDTH = 640;  
+const VIDEO_HEIGHT = 480; 
+const STORAGE_KEY = 'focus-samples'; 
+const DISTRACTION_THRESHOLD = 5000; 
 
-// App state
 const state = {
-    classifier: knnClassifier.create(),
-    video: null,
-    canvas: null,
-    ctx: null,
-    currentPose: null,
-    distractionTimer: null,
-    audioContext: null,
-    alarmSound: null,
-    pose: null,
+    classifier: knnClassifier.create(), 
+    video: null, 
+    canvas: null, 
+    ctx: null, 
+    currentPose: null, 
+    distractionTimer: null, 
+    audioContext: null, 
+    alarmSound: null, 
+    pose: null, 
     isFocusModeActive: false,
-    detectionInterval: null
+    detectionInterval: null 
 };
 
-// DOM-elementen
+// DOM-elementen - Verwijzen naar HTML elementen
 const elements = {
     feedback: document.getElementById('feedback'),
     statusIcon: document.getElementById('status-icon'),
@@ -29,7 +28,7 @@ const elements = {
     trainBtn: document.getElementById('btn-train')
 };
 
-// Initialisatie
+
 async function init() {
     try {
         // Camera instellen
@@ -42,6 +41,7 @@ async function init() {
             locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`
         });
         
+        // Configuratieopties voor pose detection
         state.pose.setOptions({
             modelComplexity: 1,
             smoothLandmarks: true,
@@ -51,9 +51,10 @@ async function init() {
             minTrackingConfidence: 0.5
         });
         
+        // Callback voor pose resultaten
         state.pose.onResults(onPoseResults);
         
-        // Event listeners
+        // Event listeners instellen
         setupEventListeners();
         
         // Start camera
@@ -70,6 +71,9 @@ async function init() {
     }
 }
 
+/**
+ * Start de pose detectie lus
+ */
 function startDetectionLoop() {
     state.detectionInterval = setInterval(() => {
         if (state.video.readyState >= 2) {
@@ -78,6 +82,9 @@ function startDetectionLoop() {
     }, 100);
 }
 
+/**
+ * Stopt de pose detectie lus
+ */
 function stopDetectionLoop() {
     if (state.detectionInterval) {
         clearInterval(state.detectionInterval);
@@ -85,7 +92,9 @@ function stopDetectionLoop() {
     }
 }
 
-// Camera instellen
+/**
+ * Stelt de camera in en start de videostream
+ */
 async function setupCamera() {
     const stream = await navigator.mediaDevices.getUserMedia({
         video: {
@@ -104,7 +113,10 @@ async function setupCamera() {
     });
 }
 
-// Pose-detectie callback
+/**
+ * Callback voor pose detectie resultaten
+ * @param {Object} results - Pose detectie resultaten
+ */
 function onPoseResults(results) {
     if (!results.poseLandmarks) {
         state.currentPose = null;
@@ -116,12 +128,12 @@ function onPoseResults(results) {
     state.canvas.width = state.video.videoWidth;
     state.canvas.height = state.video.videoHeight;
     
-    // Teken pose
+    // Teken pose op canvas
     state.ctx.save();
     state.ctx.clearRect(0, 0, state.canvas.width, state.canvas.height);
     state.ctx.drawImage(results.image, 0, 0);
     
-    // Teken landmarks
+    // Teken landmarks als rode stippen
     state.ctx.fillStyle = '#FF0000';
     state.currentPose.forEach(landmark => {
         state.ctx.beginPath();
@@ -140,7 +152,10 @@ function onPoseResults(results) {
     }
 }
 
-// Update UI op basis van status
+/**
+ * Update de UI op basis van de huidige status
+ * @param {Object|null} prediction - Voorspelling van de classifier
+ */
 function updateStatusUI(prediction) {
     if (!prediction) {
         elements.statusText.textContent = "Status: Niet actief";
@@ -161,7 +176,9 @@ function updateStatusUI(prediction) {
     }
 }
 
-// Voorspelling maken
+/**
+ * Maakt een voorspelling van de huidige pose
+ */
 async function predictPose() {
     if (!state.currentPose) return;
     
@@ -172,7 +189,10 @@ async function predictPose() {
     updateStatusUI(prediction);
 }
 
-// Train model met opgeslagen samples
+/**
+ * Traint het model met opgeslagen samples
+ * @returns {boolean} - Geeft aan of het trainen succesvol was
+ */
 function trainModel() {
     // Laad samples van localStorage
     const savedData = localStorage.getItem(STORAGE_KEY);
@@ -207,7 +227,9 @@ function trainModel() {
     return true;
 }
 
-// Afleidingstimer functies
+/**
+ * Start de afleidingstimer
+ */
 function startDistractionTimer() {
     if (!state.distractionTimer) {
         state.distractionTimer = setTimeout(() => {
@@ -216,6 +238,9 @@ function startDistractionTimer() {
     }
 }
 
+/**
+ * Stopt de afleidingstimer
+ */
 function clearDistractionTimer() {
     if (state.distractionTimer) {
         clearTimeout(state.distractionTimer);
@@ -223,6 +248,9 @@ function clearDistractionTimer() {
     }
 }
 
+/**
+ * Speelt een afleidingsalarm af (visueel, audio en notificatie)
+ */
 function playDistractionAlert() {
     // Visuele feedback
     elements.distractionAlert.classList.add('show');
@@ -243,6 +271,9 @@ function playDistractionAlert() {
     }
 }
 
+/**
+ * Speelt een alarmsignaal af
+ */
 function playAlertSound() {
     if (state.alarmSound) return;
     
@@ -268,7 +299,9 @@ function playAlertSound() {
     }, 2000);
 }
 
-// Event listeners
+/**
+ * Stelt event listeners in voor UI interacties
+ */
 function setupEventListeners() {
     elements.trainBtn.addEventListener('click', () => {
         if (state.isFocusModeActive) {
@@ -294,6 +327,9 @@ function setupEventListeners() {
     document.addEventListener('click', initAudioContext, { once: true });
 }
 
+/**
+ * Initialiseert de audio context voor alarmsignalen
+ */
 function initAudioContext() {
     state.audioContext = new (window.AudioContext || window.webkitAudioContext)();
     if (Notification.permission !== 'granted') {
@@ -301,5 +337,5 @@ function initAudioContext() {
     }
 }
 
-// Start de applicatie
+// Start de applicatie wanneer de DOM geladen is
 document.addEventListener('DOMContentLoaded', init);

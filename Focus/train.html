@@ -3,39 +3,52 @@
 <head>
     <title>FocusGuard - Trainingsmodus</title>
     <link rel="stylesheet" href="style.css">
+    <!-- Externe bibliotheken -->
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/knn-classifier"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose"></script>
+    <!-- Mobile viewport configuratie -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 </head>
 <body>
+    <!-- Hoofdcontainer voor trainingsmodus -->
     <div class="container train-container">
         <header>
             <h1>FocusGuard <span id="status-icon">🔴</span></h1>
             <p class="subtitle">Trainingsmodus</p>
         </header>
 
+        <!-- Hoofdinhoud -->
         <div class="main-content">
+            <!-- Video sectie -->
             <div class="video-section">
                 <div class="video-container">
+                    <!-- Webcam video element -->
                     <video id="webcam" autoplay playsinline></video>
+                    <!-- Canvas voor pose tekening -->
                     <canvas id="canvas"></canvas>
                 </div>
+                <!-- Feedback element -->
                 <div id="feedback">Initialiseer camera...</div>
             </div>
 
+            <!-- Trainingscontroles -->
             <div class="training-controls">
+                <!-- Statistieken container -->
                 <div class="stats-container">
+                    <!-- Nauwkeurigheid box -->
                     <div class="stat-box">
                         <h3>Model Accuracy</h3>
                         <div id="accuracy-value">0%</div>
                     </div>
+                    <!-- Confusion matrix box -->
                     <div class="stat-box" id="confusion-matrix">
                         <h3>Confusion Matrix</h3>
                         <div id="matrix-content">Nog niet beschikbaar</div>
                     </div>
                 </div>
 
+                <!-- Sample tellers -->
                 <div class="sample-counters">
                     <div class="counter concentrated">
                         <span id="count-concentrated">0</span>
@@ -47,6 +60,7 @@
                     </div>
                 </div>
 
+                <!-- Eerste knopgroep - Sample toevoegen -->
                 <div class="button-group">
                     <button id="btn-concentrated" class="btn-primary">
                         <span class="icon">➕</span> Voeg geconcentreerd toe
@@ -56,6 +70,7 @@
                     </button>
                 </div>
 
+                <!-- Tweede knopgroep - Model acties -->
                 <div class="button-group">
                     <button id="btn-train" class="btn-train">
                         <span class="icon">🎓</span> Train Model
@@ -65,6 +80,7 @@
                     </button>
                 </div>
 
+                <!-- Derde knopgroep - Data acties -->
                 <div class="button-group">
                     <button id="btn-save" class="btn-secondary">
                         <span class="icon">💾</span> Opslaan
@@ -77,6 +93,7 @@
                     </button>
                 </div>
 
+                <!-- Instructies -->
                 <div class="instructions">
                     <h3>Hoe train je het model?</h3>
                     <ol>
@@ -89,6 +106,7 @@
             </div>
         </div>
     </div>
+    <!-- Trainings JavaScript bestand -->
     <script src="train.js"></script>
 </body>
 </html>
