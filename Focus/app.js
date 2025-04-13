@@ -18,7 +18,6 @@ const state = {
     detectionInterval: null 
 };
 
-// DOM-elementen - Verwijzen naar HTML elementen
 const elements = {
     feedback: document.getElementById('feedback'),
     statusIcon: document.getElementById('status-icon'),
@@ -28,20 +27,16 @@ const elements = {
     trainBtn: document.getElementById('btn-train')
 };
 
-
 async function init() {
     try {
-        // Camera instellen
         state.video = document.getElementById('webcam');
         state.canvas = document.getElementById('canvas');
         state.ctx = state.canvas.getContext('2d');
         
-        // MediaPipe Pose instellen
         state.pose = new Pose({
             locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`
         });
         
-        // Configuratieopties voor pose detection
         state.pose.setOptions({
             modelComplexity: 1,
             smoothLandmarks: true,
@@ -51,29 +46,18 @@ async function init() {
             minTrackingConfidence: 0.5
         });
         
-        // Callback voor pose resultaten
         state.pose.onResults(onPoseResults);
-        
-        // Event listeners instellen
         setupEventListeners();
-        
-        // Start camera
         await setupCamera();
-        
-        // Start detectielus
         startDetectionLoop();
         
         elements.feedback.textContent = "Klaar voor gebruik!";
-        
     } catch (err) {
         elements.feedback.textContent = `Fout: ${err.message}`;
         console.error(err);
     }
 }
 
-/**
- * Start de pose detectie lus
- */
 function startDetectionLoop() {
     state.detectionInterval = setInterval(() => {
         if (state.video.readyState >= 2) {
@@ -82,9 +66,6 @@ function startDetectionLoop() {
     }, 100);
 }
 
-/**
- * Stopt de pose detectie lus
- */
 function stopDetectionLoop() {
     if (state.detectionInterval) {
         clearInterval(state.detectionInterval);
@@ -92,31 +73,18 @@ function stopDetectionLoop() {
     }
 }
 
-/**
- * Stelt de camera in en start de videostream
- */
 async function setupCamera() {
     const stream = await navigator.mediaDevices.getUserMedia({
-        video: {
-            width: VIDEO_WIDTH,
-            height: VIDEO_HEIGHT,
-            facingMode: 'user'
-        },
+        video: { width: VIDEO_WIDTH, height: VIDEO_HEIGHT, facingMode: 'user' },
         audio: false
     });
     state.video.srcObject = stream;
     
     return new Promise((resolve) => {
-        state.video.onloadedmetadata = () => {
-            resolve();
-        };
+        state.video.onloadedmetadata = () => resolve();
     });
 }
 
-/**
- * Callback voor pose detectie resultaten
- * @param {Object} results - Pose detectie resultaten
- */
 function onPoseResults(results) {
     if (!results.poseLandmarks) {
         state.currentPose = null;
@@ -128,34 +96,21 @@ function onPoseResults(results) {
     state.canvas.width = state.video.videoWidth;
     state.canvas.height = state.video.videoHeight;
     
-    // Teken pose op canvas
     state.ctx.save();
     state.ctx.clearRect(0, 0, state.canvas.width, state.canvas.height);
     state.ctx.drawImage(results.image, 0, 0);
     
-    // Teken landmarks als rode stippen
     state.ctx.fillStyle = '#FF0000';
     state.currentPose.forEach(landmark => {
         state.ctx.beginPath();
-        state.ctx.arc(
-            landmark.x * state.canvas.width,
-            landmark.y * state.canvas.height,
-            5, 0, 2 * Math.PI
-        );
+        state.ctx.arc(landmark.x * state.canvas.width, landmark.y * state.canvas.height, 5, 0, 2 * Math.PI);
         state.ctx.fill();
     });
     state.ctx.restore();
     
-    // Voorspelling maken als focus mode actief is
-    if (state.isFocusModeActive) {
-        predictPose();
-    }
+    if (state.isFocusModeActive) predictPose();
 }
 
-/**
- * Update de UI op basis van de huidige status
- * @param {Object|null} prediction - Voorspelling van de classifier
- */
 function updateStatusUI(prediction) {
     if (!prediction) {
         elements.statusText.textContent = "Status: Niet actief";
@@ -176,25 +131,16 @@ function updateStatusUI(prediction) {
     }
 }
 
-/**
- * Maakt een voorspelling van de huidige pose
- */
 async function predictPose() {
     if (!state.currentPose) return;
     
     const features = state.currentPose.map(p => [p.x, p.y, p.visibility]).flat();
     const tensor = tf.tensor1d(features);
-    
     const prediction = await state.classifier.predictClass(tensor);
     updateStatusUI(prediction);
 }
 
-/**
- * Traint het model met opgeslagen samples
- * @returns {boolean} - Geeft aan of het trainen succesvol was
- */
 function trainModel() {
-    // Laad samples van localStorage
     const savedData = localStorage.getItem(STORAGE_KEY);
     if (!savedData || JSON.parse(savedData).length === 0) {
         elements.feedback.textContent = "Geen trainingsdata. Ga naar trainingsmodus om samples toe te voegen.";
@@ -202,8 +148,6 @@ function trainModel() {
     }
     
     const samples = JSON.parse(savedData);
-    
-    // Check of er voldoende samples zijn
     const counts = samples.reduce((acc, sample) => {
         acc[sample.label] = (acc[sample.label] || 0) + 1;
         return acc;
@@ -214,10 +158,7 @@ function trainModel() {
         return false;
     }
     
-    // Clear previous model
     state.classifier.clearAllClasses();
-    
-    // Add new samples
     samples.forEach(sample => {
         const tensor = tf.tensor1d(sample.pose);
         state.classifier.addExample(tensor, sample.label);
@@ -227,20 +168,12 @@ function trainModel() {
     return true;
 }
 
-/**
- * Start de afleidingstimer
- */
 function startDistractionTimer() {
     if (!state.distractionTimer) {
-        state.distractionTimer = setTimeout(() => {
-            playDistractionAlert();
-        }, DISTRACTION_THRESHOLD);
+        state.distractionTimer = setTimeout(playDistractionAlert, DISTRACTION_THRESHOLD);
     }
 }
 
-/**
- * Stopt de afleidingstimer
- */
 function clearDistractionTimer() {
     if (state.distractionTimer) {
         clearTimeout(state.distractionTimer);
@@ -248,32 +181,17 @@ function clearDistractionTimer() {
     }
 }
 
-/**
- * Speelt een afleidingsalarm af (visueel, audio en notificatie)
- */
 function playDistractionAlert() {
-    // Visuele feedback
     elements.distractionAlert.classList.add('show');
-    setTimeout(() => {
-        elements.distractionAlert.classList.remove('show');
-    }, 5000);
+    setTimeout(() => elements.distractionAlert.classList.remove('show'), 5000);
     
-    // Browser notificatie
     if (Notification.permission === 'granted') {
-        new Notification('Focus Melding', {
-            body: 'Je bent al 5 seconden afgeleid!'
-        });
+        new Notification('Focus Melding', { body: 'Je bent al 5 seconden afgeleid!' });
     }
     
-    // Audio feedback
-    if (state.audioContext) {
-        playAlertSound();
-    }
+    if (state.audioContext) playAlertSound();
 }
 
-/**
- * Speelt een alarmsignaal af
- */
 function playAlertSound() {
     if (state.alarmSound) return;
     
@@ -286,7 +204,6 @@ function playAlertSound() {
     
     oscillator.connect(gainNode);
     gainNode.connect(state.audioContext.destination);
-    
     oscillator.start();
     state.alarmSound = { oscillator, gainNode };
     
@@ -299,43 +216,29 @@ function playAlertSound() {
     }, 2000);
 }
 
-/**
- * Stelt event listeners in voor UI interacties
- */
 function setupEventListeners() {
     elements.trainBtn.addEventListener('click', () => {
         if (state.isFocusModeActive) {
-            // Pauzeren
             state.isFocusModeActive = false;
             elements.trainBtn.innerHTML = '<span class="icon">🎓</span> Start Focus Mode';
             elements.feedback.textContent = "Focus mode gepauzeerd";
             elements.statusIcon.textContent = "🔴";
             clearDistractionTimer();
             updateStatusUI(null);
-        } else {
-            // Starten
-            if (trainModel()) {
-                state.isFocusModeActive = true;
-                elements.trainBtn.innerHTML = '<span class="icon">⏸️</span> Pauzeer';
-                elements.feedback.textContent = "Focus mode actief!";
-                elements.statusIcon.textContent = "🟢";
-            }
+        } else if (trainModel()) {
+            state.isFocusModeActive = true;
+            elements.trainBtn.innerHTML = '<span class="icon">⏸️</span> Pauzeer';
+            elements.feedback.textContent = "Focus mode actief!";
+            elements.statusIcon.textContent = "🟢";
         }
     });
 
-    // Audio context initialiseren bij eerste klik
     document.addEventListener('click', initAudioContext, { once: true });
 }
 
-/**
- * Initialiseert de audio context voor alarmsignalen
- */
 function initAudioContext() {
     state.audioContext = new (window.AudioContext || window.webkitAudioContext)();
-    if (Notification.permission !== 'granted') {
-        Notification.requestPermission();
-    }
+    if (Notification.permission !== 'granted') Notification.requestPermission();
 }
 
-// Start de applicatie wanneer de DOM geladen is
 document.addEventListener('DOMContentLoaded', init);
